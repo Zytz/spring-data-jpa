@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+
+       http://www.springframework.org/schema/data/jpa  http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+ http://www.springframework.org/schema/mvc
+        https://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+
+    <!--数据库连接池-->
+
+    <!--引入外部资源文件-->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!--第三方jar中的bean定义在xml中-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!--配置一个JPA的entityManagerFactory,类似于mybatisSqlsession -->
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <!--配置 数据源-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--配置包扫描（pojo所在的包）-->
+        <property name="packagesToScan" value="com.john.pojo"/>
+        <!--配置JPA具体的实现，hibernate-->
+        <property name="persistenceProvider">
+            <bean class="org.hibernate.jpa.HibernatePersistenceProvider"/>
+
+        </property>
+        <!--jpa放眼配置，不同的jpa实现对于类似beginTransaction 的不同操作/-->
+        <property name="jpaDialect">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect"/>
+        </property>
+
+        <!--配置具体的provider，hibernate的具体执行细节-->
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <!--是否自动创建表？
+                pojo与数据表之间的映射关系
+
+                -->
+                <property name="generateDdl" value="false"/>
+                <!--指定数据库的类型-->
+                <property name="database" value="MYSQL"/>
+
+                <!--配置数据库的方言
+                hibernate可以帮助我们拼装sql语句，但是不同的数据库
+                拼装的方式 是不一样的
+                -->
+                <property name="databasePlatform" value="org.hibernate.dialect.MySQLDialect"/>
+
+                <!--是否显示sql,执行操作数据的时候，是否打印sql-->
+                <property name="showSql" value="true"/>
+
+            </bean>
+        </property>
+    </bean>
+
+    <!--引用上面额entiryManagerFactory
+        <jpa:repositories 配置jpa的dao层细节
+        <
+    -->
+
+    <jpa:repositories base-package="com.john.dao" entity-manager-factory-ref="entityManagerFactory"
+                      transaction-manager-ref="transactionManager"/>
+
+    <!--事务管理器-->
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+
+    </bean>
+    <!--声明式事务-->
+    <!--<tx:annotation-driven/>-->
+
+    <context:component-scan base-package="com.john"/>
+
+
+    <!--配置springmvc的视图解析器-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+
+    <!--
+        自动注册最合适的处理器映射器，处理器适配器(调用handler方法)
+    -->
+    <mvc:annotation-driven />
+
+
+</beans>
