@@ -14,8 +14,8 @@
 
 <script>
     $(document).ready(function() {
-        $('$login').blur(function(event) {
-            var username = $('#userName').val();
+        $('#login').blur(function(event) {
+            var username = $('#username').val();
             var password = $('#password').val();
             $.get('/users/login', {
                 username : username,
